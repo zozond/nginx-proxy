@@ -29,10 +29,8 @@ function appendListConfFile(append_item) {
     }
 
     /* 파일 추가 */
-    if(flag) fs.appendFileSync('list.conf', new_list_data, 'utf8');
+    if(flag) fs.appendFileSync('list.conf', data, 'utf8');
 }
-
-
 
 
 function removeListConfFile(remove_item) {
