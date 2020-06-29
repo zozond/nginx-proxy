@@ -15,21 +15,21 @@ function appendListConfFile(append_item) {
         return;
     }
 
-
     /* 이미 있는지 확인*/
-    var data = append_item.id + " " + append_item.name + " " + append_item.ip + "\n";
+    var data = append_item.id + " " + append_item.name + " " + append_item.ip;
     var list_data = fs.readFileSync('list.conf', 'utf8');
     var list = list_data.toString().split("\n");
     var flag = true;
-    var new_list_data = "";
-    for (var item in list) {
+    for (var item of list) {
         if (data == item) {
             flag = false;
         }
     }
-
     /* 파일 추가 */
-    if(flag) fs.appendFileSync('list.conf', data, 'utf8');
+    if(flag) {
+        data += "\n";
+        fs.appendFileSync('list.conf', data, 'utf8');
+    }
 }
 
 
@@ -67,7 +67,7 @@ function writeProxyConfFile() {
     var default_data = 'server {\n    listen 10000;\n'
     /* ip 리스트를 읽어서 conf 파일에 저장 한다. */
     var list = list_data.toString().split("\n");
-    for (var item in list) {
+    for (var item of list) {
         var properties = item.toString().split(" ");
         default_data += "    location ~ ^/" + properties[0] + "/" + properties[1] + "/(.*)$ { "
         default_data += "        proxy_pass http://" + properties[2] + ":10000/$1$is_args$args; \n";
