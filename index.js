@@ -69,6 +69,8 @@ function writeProxyConfFile() {
     var list = list_data.toString().split("\n");
     for (var item of list) {
         var properties = item.toString().split(" ");
+
+        if(properties[0] == undefined || properties[2] == undefined ||  properties[2] == undefined) continue;
         default_data += "    location ~ ^/" + properties[0] + "/" + properties[1] + "/(.*)$ { "
         default_data += "        proxy_pass http://" + properties[2] + ":10000/$1$is_args$args; \n";
         default_data += "        proxy_http_version  1.1; "
