@@ -9,14 +9,27 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json());
 
 
-
-function appendListConfFile(append_item){
+function appendListConfFile(append_item) {
     if (!fs.existsSync('list.conf')) {
         console.log("list.conf not found");
         return;
-    } 
+    }
+
+
+    /* 이미 있는지 확인*/
     var data = append_item.id + " " + append_item.name + " " + append_item.ip + "\n";
-    fs.appendFileSync('list.conf', data, 'utf8');
+    var list_data = fs.readFileSync('list.conf', 'utf8');
+    var list = list_data.toString().split("\n");
+    var flag = true;
+    var new_list_data = "";
+    for (var item in list) {
+        if (data == item) {
+            flag = false;
+        }
+    }
+
+    /* 파일 추가 */
+    if(flag) fs.appendFileSync('list.conf', new_list_data, 'utf8');
 }
 
 
@@ -72,8 +85,6 @@ function writeProxyConfFile() {
 }
 
 
-
-
 app.get('/', (req, res) => {
     res.status(200).send('hello');
     return;
@@ -83,22 +94,23 @@ app.get('/version', (req, res) => {
     res.status(200).send('version 1');
 })
 
+/* curl -X POST localhost:3000/add -H "Content-Type: application/json" -d '{"id":"id", "name": "name", "ip": "192.168.0.1"}' */
 app.post('/add', (req, res) => {
     /*  data.id, data.name, data.ip */
     var data = req.body;
     appendListConfFile(data);
-    console.log("Insert Data : " + data);
+    console.log("Insert Data : ", data);
     writeProxyConfFile();
-    console.log("Proxy Update : " + data);
-    res.status(200).send(item);
+    console.log("Proxy Update : ", data);
+    res.status(200).send(data);
 })
 
 app.post('/remove', (req, res) => {
     var data = req.body;
     removeListConfFile(data);
-    console.log("Remove Data : " + data);
+    console.log("Remove Data : ", data);
     writeProxyConfFile();
-    console.log("Proxy Update : " + data);
+    console.log("Proxy Update : ", data);
     res.status(200).send(data)
 })
 
