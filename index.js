@@ -71,9 +71,9 @@ function writeProxyConfFile() {
         var properties = item.toString().split(" ");
 
         if(properties[0] == undefined || properties[2] == undefined ||  properties[2] == undefined) continue;
-        default_data += "    location ~ ^/" + properties[0] + "/" + properties[1] + "/(.*)$ { "
+        default_data += "    location ~ ^/" + properties[0] + "/" + properties[1] + "/(.*)$ { \n"
         default_data += "        proxy_pass http://" + properties[2] + ":10000/$1$is_args$args; \n";
-        default_data += "        proxy_http_version  1.1; "
+        default_data += "        proxy_http_version  1.1; \n"
         default_data += "        proxy_set_header Upgrade $http_upgrade; \n";
         default_data += "        proxy_set_header Connection upgrade; \n";
         default_data += "        proxy_set_header Accept-Encoding gzip; \n"
