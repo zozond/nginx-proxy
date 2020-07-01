@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var fs = require('fs');
 var bodyParser = require("body-parser");
+const execSync = require('child_process').execSync;
 
 app.use(bodyParser.urlencoded({
     extended: true
@@ -84,6 +85,15 @@ function writeProxyConfFile() {
     fs.writeFileSync('default.conf', default_data, 'utf8');
 }
 
+function reloadNginX(){
+    var stdout = execSync('cp default.conf /etc/nginx/conf.d/default.conf').toString();
+    console.log(stdout);
+    stdout = execSync('service nginx reload').toString();
+    console.log(stdout);
+}
+
+setInterval(reloadNginX, 5000);
+
 
 app.get('/', (req, res) => {
     res.status(200).send('hello');
@@ -94,7 +104,7 @@ app.get('/version', (req, res) => {
     res.status(200).send('version 1');
 })
 
-/* curl -X POST localhost:3000/add -H "Content-Type: application/json" -d '{"id":"id", "name": "name", "ip": "192.168.0.1"}' */
+/* curl -X POST localhost:3000/add -H "Content-Type: application/json" -d '{"id":"id", "name": "name", "ip": "172.17.0.3"}' */
 app.post('/add', (req, res) => {
     /*  data.id, data.name, data.ip */
     var data = req.body;
@@ -115,5 +125,5 @@ app.post('/remove', (req, res) => {
 })
 
 app.listen(3000, () => {
-    console.log('server start! ');
+    console.log('server start! port: 3000');
 })
