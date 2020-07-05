@@ -3,12 +3,15 @@ var app = express();
 var fs = require('fs');
 var bodyParser = require("body-parser");
 const execSync = require('child_process').execSync;
-
+var Port = 3000;
 app.use(bodyParser.urlencoded({
     extended: true
 }));
 app.use(bodyParser.json());
 
+
+/* docker build -t nginx-proxy . */
+/* docker run -d -p 3000:3000 -p 10000:10000 --name proxy nginx-proxy */
 
 /* 
     #### 내가 가지고 있을 대상 ####
@@ -54,23 +57,27 @@ function appendListFile(append_item) {
 
 
 function removeListFile(remove_item) {
+    if (!fs.existsSync('list.conf')) {
+        console.log("list.conf not found");
+        return;
+    }
+
     var id = remove_item.id;
     var name = remove_item.name;
     var ip = remove_item.ip;
     var remove_str = id + " " + name + " " + ip;
-    if (!fs.existsSync('list.conf')) {
-        console.log("list.conf not found");
-    } else {
-        var list_data = fs.readFileSync('list.conf', 'utf8');
-        var list = list_data.toString().split("\n");
-        var new_list_data = "";
-        for (var item in list) {
-            if (remove_str != item) {
-                new_list_data += item + "\n";
-            }
+
+
+    var list_data = fs.readFileSync('list.conf', 'utf8');
+    var list = list_data.toString().split("\n");
+    var new_list_data = "";
+    for (var item of list) {
+        if (remove_str != item) {
+            new_list_data += item + "\n";
         }
-        fs.writeFileSync('list.conf', new_list_data, 'utf8');
     }
+
+    fs.writeFileSync('list.conf', new_list_data, 'utf8');
 }
 
 function writeProxyConfFile() {
@@ -135,17 +142,16 @@ function doQueue(){
     }
 }
 
-
 /* 10 초에 한번 리로드 함 */
 setInterval(doQueue, 10000);
 
 app.get('/', (req, res) => {
-    res.status(200).send('nginx-proxy Rest-Api');
+    res.status(200).send('Nginx-Proxy Rest-Api is Running!!! ');
     return;
 })
 
 app.get('/version', (req, res) => {
-    res.status(200).send('nginx-proxy Rest-Api v1.0.0');
+    res.status(200).send('Nginx-Proxy Rest-Api v1.0.0');
 })
 
 /* 추가: curl -X POST 192.168.99.100:3000/add -H "Content-Type: application/json" -d '{"id":"1", "name": "name", "ip": "172.17.0.3"}' */
@@ -153,27 +159,19 @@ app.get('/version', (req, res) => {
 /* 접속: curl 192.168.99.100:10000/id/name/ */
 
 app.post('/add', (req, res) => {
-    /*  data.id, data.name, data.ip */
     var data = req.body;
     console.log("Insert Data : ", data);
-    var item = {};
-    item.type = 1;
-    item.data = data;
-    queue.push(item);
-
+    queue.push({type:1, data:data});
     res.status(200).send(data);
 })
 
 app.post('/remove', (req, res) => {
     var data = req.body;
     console.log("Remove Data : ", data);
-    var item = {};
-    item.type = 0;
-    item.data = data;
-    queue.push(item);
+    queue.push({type:0, data:data});
     res.status(200).send(data)
 })
 
-app.listen(3000, () => {
-    console.log('server start! port: 3000');
+app.listen(Port, () => {
+    console.log('server start!\n Port: '+ Port);
 })
