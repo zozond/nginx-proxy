@@ -3,6 +3,61 @@ var app = express();
 var fs = require('fs');
 var bodyParser = require("body-parser");
 const execSync = require('child_process').execSync;
+
+var winston = require('winston'); //로그 처리 모듈
+var winstonDaily = require('winston-daily-rotate-file'); //로그 일별 처리 모듈
+var moment = require('moment'); //시간 처리 모듈
+
+function timeStampFormat(){
+    return moment().format('YYYY-MM-DD HH:mm:ss.SSS ZZ');
+};
+
+var logger = new (winston.createLogger) ({ //createLogger 로 바꿔야 에러 안남
+    transports: [
+        new (winstonDaily) ({
+            name: 'info-file',
+            filename: './log/daily/%DATE%.log', //%DATE% 필요
+            datePattern: 'YYYY-MM-DD', //datePattern 수정
+            colorize: false,
+            maxsize: 50000000,
+            maxFiles: 1000,
+            level: 'debug',
+            showLevel: true,
+            json: false,
+            timestamp: timeStampFormat
+        }),
+        new (winston.transports.Console) ({
+            name: 'debug-console',
+            colorize:true,
+            level: 'debug',
+            showLevel: true,
+            json: false,
+            timestamp: timeStampFormat
+        })
+    ],
+    exceptionHandlers: [
+        new(winstonDaily)({
+            name: 'exception-file',
+            filename: './log/exception/%DATE%.log',
+            datePattern: 'YYYY-MM-DD',
+            colorize: false,
+            maxsize: 50000000,
+            level: 'error',
+            showLevel: true,
+            json: false,
+            timestamp: timeStampFormat
+        }),
+        new(winston.transports.Console)({
+            name: 'exception-console',
+            colorize: true,
+            level: 'debug',
+            showLevel: true,
+            json: false,
+            timestamp: timeStampFormat
+        })
+    ]
+});
+
 var Port = 3000;
 app.use(bodyParser.urlencoded({
     extended: true
@@ -34,7 +89,7 @@ var queue = [];
 
 function appendListFile(append_item) {
     if (!fs.existsSync('list.conf')) {
-        console.log("list.conf not found");
+        logger.debug("list.conf not found")
         return;
     }
 
@@ -58,7 +113,7 @@ function appendListFile(append_item) {
 
 function removeListFile(remove_item) {
     if (!fs.existsSync('list.conf')) {
-        console.log("list.conf not found");
+        logger.debug("list.conf not found");
         return;
     }
 
@@ -76,18 +131,17 @@ function removeListFile(remove_item) {
             new_list_data += item + "\n";
         }
     }
-
     fs.writeFileSync('list.conf', new_list_data, 'utf8');
 }
 
 function writeProxyConfFile() {
     if (!fs.existsSync('list.conf')) {
-        console.log("list.conf not found");
+        logger.debug("list.conf not found");
         return;
     }
 
     if (!fs.existsSync('default.conf')) {
-        console.log("default.conf not found");
+        logger.debug("default.conf not found");
         return;
     }
 
@@ -116,9 +170,9 @@ function writeProxyConfFile() {
 
 function reloadNginX(){
     var stdout = execSync('cp default.conf /etc/nginx/conf.d/default.conf').toString();
-    console.log(stdout);
+    logger.debug("default.conf COPY TO /etc/nginx/conf.d/default.conf : " + stdout);
     stdout = execSync('service nginx reload').toString();
-    console.log(stdout);
+    logger.debug("Nginx Service Reload : " + stdout);
 }
 
 function doQueue(){
@@ -136,9 +190,9 @@ function doQueue(){
 
     if(flag){
         writeProxyConfFile();
-        console.log("Write Proxy Conf File Done!!! ");
+        logger.debug("Write Proxy Conf File Done!!! ");
         reloadNginX();
-        console.log("Reload NginX Done!!! ");
+        logger.debug("Reload NginX Done!!! ");
     }
 }
 
@@ -159,19 +213,21 @@ app.get('/version', (req, res) => {
 /* 접속: curl 192.168.99.100:10000/id/name/ */
 
 app.post('/add', (req, res) => {
+    var ip = req.headers['x-forwarded-for'] ||  req.connection.remoteAddress;
     var data = req.body;
-    console.log("Insert Data : ", data);
+    logger.debug("[add] " + ip + " : "+  JSON.stringify(data));
     queue.push({type:1, data:data});
     res.status(200).send(data);
 })
 
 app.post('/remove', (req, res) => {
+    var ip = req.headers['x-forwarded-for'] ||  req.connection.remoteAddress;
     var data = req.body;
-    console.log("Remove Data : ", data);
+    logger.debug("[remove] " + ip + " : "+  JSON.stringify(data));
     queue.push({type:0, data:data});
     res.status(200).send(data)
 })
 
-app.listen(Port, () => {
-    console.log('server start!\n Port: '+ Port);
+app.listen(Port, '0.0.0.0', () => {
+    logger.debug('Nginx-Proxy Rest-Api Server start !!!\nPort: '+ Port);
 })
