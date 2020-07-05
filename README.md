@@ -8,12 +8,19 @@ docker build -t nginx-proxy .
 docker run -d -p 3000:3000 -p 10000:10000 --name proxy nginx-proxy
 
 ## Usage
-추가: curl -X POST 192.168.99.100:3000/add -H "Content-Type: application/json" -d '{"id":"id", "name": "name", "ip": "172.17.0.3"}' 
+1. 추가
+curl -X POST 192.168.99.100:3000/add -H "Content-Type: application/json" -d '{"id":"id", "name": "name", "ip": "172.17.0.3"}' 
 <br><br>
-삭제: curl -X POST 192.168.99.100:3000/remove -H "Content-Type: application/json" -d '{"id":"id", "name": "name", "ip": "172.17.0.3"}' 
+2. 삭제
+curl -X POST 192.168.99.100:3000/remove -H "Content-Type: application/json" -d '{"id":"id", "name": "name", "ip": "172.17.0.3"}' 
 <br><br>
-접속: curl 192.168.99.100:10000/id/name/ 
+3. 접속
+curl 192.168.99.100:10000/id/name/ 
 <br><br>
+4. 서버 확인 
+curl 192.168.99.100:10000/
+<br><br> 
+
 
 ## Description
 list.conf : rest-api를 통해 받은 프록시 대상 목록 <br>
