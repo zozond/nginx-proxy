@@ -10,7 +10,26 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json());
 
 
-function appendListConfFile(append_item) {
+/* 
+    #### 내가 가지고 있을 대상 ####
+    list.conf : rest-api를 통해 받은 프록시 대상 목록
+
+    #### 복사 시킬 대상 ####
+    default.conf : nginx 프록시 conf파일로 복사 시킬 템플릿
+    nginx.conf : nginx 프록시를 위해 필요한 설정을 등록시킬 템플릿 
+*/
+
+/* 
+    queue에 들어갈 item 
+    {
+        type: 0 or 1,  // 0 일때 : 삭제
+                       // 1 일때 : 추가
+        data: 들어온 데이터 ( id, name, ip 형식)
+    }
+*/
+var queue = [];
+
+function appendListFile(append_item) {
     if (!fs.existsSync('list.conf')) {
         console.log("list.conf not found");
         return;
@@ -34,7 +53,7 @@ function appendListConfFile(append_item) {
 }
 
 
-function removeListConfFile(remove_item) {
+function removeListFile(remove_item) {
     var id = remove_item.id;
     var name = remove_item.name;
     var ip = remove_item.ip;
@@ -59,6 +78,7 @@ function writeProxyConfFile() {
         console.log("list.conf not found");
         return;
     }
+
     if (!fs.existsSync('default.conf')) {
         console.log("default.conf not found");
         return;
@@ -81,9 +101,11 @@ function writeProxyConfFile() {
         default_data += "        proxy_set_header  X-Forwarded-For  $proxy_protocol_addr; \n"
         default_data += "    }\n";
     }
+
     default_data += '\n}';
     fs.writeFileSync('default.conf', default_data, 'utf8');
 }
+
 
 function reloadNginX(){
     var stdout = execSync('cp default.conf /etc/nginx/conf.d/default.conf').toString();
@@ -92,35 +114,62 @@ function reloadNginX(){
     console.log(stdout);
 }
 
-setInterval(reloadNginX, 5000);
+function doQueue(){
+    var flag = false;
 
+    while(queue.length > 0){
+        flag = true;
+        var item = queue.pop();
+        if(item.type == 1){
+            appendListFile(item.data);
+        } else{
+            removeListFile(item.data);
+        }
+    }
+
+    if(flag){
+        writeProxyConfFile();
+        console.log("Write Proxy Conf File Done!!! ");
+        reloadNginX();
+        console.log("Reload NginX Done!!! ");
+    }
+}
+
+
+/* 10 초에 한번 리로드 함 */
+setInterval(doQueue, 10000);
 
 app.get('/', (req, res) => {
-    res.status(200).send('hello');
+    res.status(200).send('nginx-proxy Rest-Api');
     return;
 })
 
 app.get('/version', (req, res) => {
-    res.status(200).send('version 1');
+    res.status(200).send('nginx-proxy Rest-Api v1.0.0');
 })
 
 /* curl -X POST localhost:3000/add -H "Content-Type: application/json" -d '{"id":"id", "name": "name", "ip": "172.17.0.3"}' */
+/* curl -X POST 192.168.99.100:3000/add -H "Content-Type: application/json" -d '{"id":"id", "name": "name", "ip": "172.17.0.3"}' */
+/* curl 192.168.99.100:10000/id/name/ */
 app.post('/add', (req, res) => {
     /*  data.id, data.name, data.ip */
     var data = req.body;
-    appendListConfFile(data);
     console.log("Insert Data : ", data);
-    writeProxyConfFile();
-    console.log("Proxy Update : ", data);
+    var item = {};
+    item.type = 1;
+    item.data = data;
+    queue.push(type);
+
     res.status(200).send(data);
 })
 
 app.post('/remove', (req, res) => {
     var data = req.body;
-    removeListConfFile(data);
     console.log("Remove Data : ", data);
-    writeProxyConfFile();
-    console.log("Proxy Update : ", data);
+    var item = {};
+    item.type = 0;
+    item.data = data;
+    queue.push(type);
     res.status(200).send(data)
 })
 
