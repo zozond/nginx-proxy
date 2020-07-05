@@ -80,6 +80,9 @@ app.post('/remove', (req, res) => {
     res.status(200).send(data)
 })
 
+/* 현재 등록된 리스트 확인 */
+
+
 app.listen(Port, '0.0.0.0', () => {
     logger.debug('Nginx-Proxy Rest-Api Server start !!!\nPort: '+ Port);
 })

@@ -6,21 +6,18 @@ docker build -t nginx-proxy .
 
 ## Docker Run
 docker run -d -p 3000:3000 -p 10000:10000 --name proxy nginx-proxy
-docker run -d -p 3000:3000 -p 10000:10000 --name proxy nginx-proxy
+docker run -d -p 3000:3000 -p 10000:10000 -v <로그파일을 보기 위한 폴더 지정>:/app/log --name proxy nginx-proxy
+docker run -d -p 3000:3000 -p 10000:10000 -v <로그파일을 보기 위한 폴더 지정>:/app/log --name proxy nginx-proxy
 
 ## Usage
 1. 추가 <br>
 curl -X POST 192.168.99.100:3000/add -H "Content-Type: application/json" -d '{"id":"id", "name": "name", "ip": "172.17.0.3"}' 
-<br>
 2. 삭제 <br>
 curl -X POST 192.168.99.100:3000/remove -H "Content-Type: application/json" -d '{"id":"id", "name": "name", "ip": "172.17.0.3"}' 
-<br>
 3. 접속 <br>
 curl 192.168.99.100:10000/id/name/ 
-<br>
 4. 서버 확인 <br> 
 curl 192.168.99.100:10000/
-<br>
 
 
 ## Description
