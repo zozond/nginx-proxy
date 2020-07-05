@@ -5,8 +5,7 @@
 docker build -t nginx-proxy .
 
 ## Docker Run
-docker run -d -p 3000:3000 -p 10000:10000 --name proxy nginx-proxy
-docker run -d -p 3000:3000 -p 10000:10000 -v <로그파일을 보기 위한 폴더 지정>:/app/log --name proxy nginx-proxy
+docker run -d -p 3000:3000 -p 10000:10000 --name proxy nginx-proxy<br>
 docker run -d -p 3000:3000 -p 10000:10000 -v <로그파일을 보기 위한 폴더 지정>:/app/log --name proxy nginx-proxy
 
 ## Usage
@@ -31,7 +30,7 @@ index.js : 실제로 동작하는 파일<br>
 새로운 Nginx Proxy가 등록되었는지 확인하는데 걸리는 시간 : 10초 <br>
 
 ## Log
-로그는 /log 파일 밑에 daily, exception 두개의 폴더로 관리됩니다.
+로그는 /log 파일 밑에 daily, exception 두개의 폴더로 관리됩니다. <br>
 daily는 일반적인 로그, exception은 예상치 못한 에러에 관련되어 로그가 생성됩니다.
 
 ## 문의
