@@ -148,9 +148,10 @@ app.get('/version', (req, res) => {
     res.status(200).send('nginx-proxy Rest-Api v1.0.0');
 })
 
-/* curl -X POST localhost:3000/add -H "Content-Type: application/json" -d '{"id":"id", "name": "name", "ip": "172.17.0.3"}' */
-/* curl -X POST 192.168.99.100:3000/add -H "Content-Type: application/json" -d '{"id":"id", "name": "name", "ip": "172.17.0.3"}' */
-/* curl 192.168.99.100:10000/id/name/ */
+/* 추가: curl -X POST 192.168.99.100:3000/add -H "Content-Type: application/json" -d '{"id":"1", "name": "name", "ip": "172.17.0.3"}' */
+/* 삭제: curl -X POST 192.168.99.100:3000/remove -H "Content-Type: application/json" -d '{"id":"id", "name": "name", "ip": "172.17.0.3"}' */
+/* 접속: curl 192.168.99.100:10000/id/name/ */
+
 app.post('/add', (req, res) => {
     /*  data.id, data.name, data.ip */
     var data = req.body;
@@ -158,7 +159,7 @@ app.post('/add', (req, res) => {
     var item = {};
     item.type = 1;
     item.data = data;
-    queue.push(type);
+    queue.push(item);
 
     res.status(200).send(data);
 })
@@ -169,7 +170,7 @@ app.post('/remove', (req, res) => {
     var item = {};
     item.type = 0;
     item.data = data;
-    queue.push(type);
+    queue.push(item);
     res.status(200).send(data)
 })
 
